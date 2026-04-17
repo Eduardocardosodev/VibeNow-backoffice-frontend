@@ -39,13 +39,6 @@ export function LoginScreen() {
           equipa.
         </p>
 
-        {apiMissing && (
-          <p className="auth-config-hint">
-            Configure <code>VITE_API_BASE_URL</code> no ficheiro <code>.env</code> e reinicie o
-            servidor de desenvolvimento.
-          </p>
-        )}
-
         {error ? <p className="auth-error">{error}</p> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>

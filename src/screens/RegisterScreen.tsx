@@ -11,6 +11,7 @@ import {
 } from '@/services/viaCep'
 import type { EstablishmentType, RegisterEstablishmentAndOwnerBody } from '@/types/auth'
 import { cnpjDigits, formatCnpjInput } from '@/utils'
+import { digitsOnly, formatPhoneDisplay } from '@/utils/formatPhoneBRL'
 import '@/styles/authLayout.css'
 
 function onlyDigits(s: string): string {
@@ -184,7 +185,7 @@ export function RegisterScreen() {
       return null
     }
 
-    const phoneDigits = onlyDigits(phone)
+    const phoneDigits = digitsOnly(phone)
     if (phoneDigits.length !== 10 && phoneDigits.length !== 11) {
       setFormError('Telefone: use apenas DDD + número (10 ou 11 dígitos, sem +55).')
       return null
@@ -478,15 +479,13 @@ export function RegisterScreen() {
               type="tel"
               inputMode="numeric"
               autoComplete="tel-national"
-              minLength={10}
-              maxLength={11}
-              placeholder="11999999999"
+              maxLength={15}
+              placeholder="(11) 99999-9999"
               value={phone}
-              onChange={(ev) => setPhone(onlyDigits(ev.target.value).slice(0, 11))}
+              onChange={(ev) => setPhone(formatPhoneDisplay(ev.target.value))}
               required
               disabled={apiMissing || submitting}
             />
-            <p className="auth-hint">Somente dígitos: DDD (2) + telefone (8 ou 9), sem código do país.</p>
           </div>
 
           <div className="auth-field">
