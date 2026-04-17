@@ -1,0 +1,219 @@
+.app-shell {
+  display: flex;
+  min-height: 100dvh;
+  /* Evita esticar a sidebar à altura da coluna principal — só a área central deve crescer com o scroll. */
+  align-items: flex-start;
+}
+
+.app-sidebar {
+  --sidebar-pad: 0.75rem;
+  flex-shrink: 0;
+  width: 260px;
+  height: 100dvh;
+  max-height: 100dvh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  transition: width 0.22s ease;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.app-sidebar--collapsed {
+  width: 72px;
+}
+
+.app-sidebar__header {
+  flex-shrink: 0;
+  padding: 1rem var(--sidebar-pad);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.25rem;
+  overflow: hidden;
+}
+
+.app-sidebar__brand-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-primary);
+}
+
+.app-sidebar__brand-text {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  white-space: nowrap;
+  transition:
+    opacity 0.18s ease,
+    max-width 0.22s ease;
+  max-width: 200px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.app-sidebar--collapsed .app-sidebar__brand-text {
+  max-width: 0;
+  opacity: 0;
+}
+
+.app-sidebar--collapsed .app-sidebar__brand {
+    justify-content: center;
+}
+
+.app-sidebar__nav {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem var(--sidebar-pad);
+  overflow-y: auto;
+}
+
+.app-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.app-sidebar__link:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.app-sidebar__link--active {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.app-sidebar__link--active:hover {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.app-sidebar__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.app-sidebar__label {
+  white-space: nowrap;
+  transition:
+    opacity 0.18s ease,
+    max-width 0.22s ease;
+  max-width: 200px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.app-sidebar--collapsed .app-sidebar__link {
+  justify-content: center;
+  gap: 0;
+}
+
+.app-sidebar--collapsed .app-sidebar__label {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-sidebar__footer {
+  flex-shrink: 0;
+  padding: var(--sidebar-pad);
+  border-top: 1px solid var(--color-border);
+}
+
+.app-sidebar__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.app-sidebar__toggle:hover {
+  color: var(--color-text);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.app-sidebar--collapsed .app-sidebar__toggle {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.app-sidebar__toggle-label {
+  white-space: nowrap;
+}
+
+.app-sidebar--collapsed .app-sidebar__toggle-label {
+  display: none;
+}
+
+.app-shell__main {
+  flex: 1;
+  min-width: 0;
+  min-height: 100dvh;
+}
+
+.portal-placeholder {
+  padding: 2rem clamp(1.25rem, 4vw, 2.5rem);
+  max-width: 40rem;
+}
+
+.portal-placeholder__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.portal-placeholder__text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
