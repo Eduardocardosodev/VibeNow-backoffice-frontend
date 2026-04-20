@@ -68,6 +68,7 @@ function buildQuery(params: EstablishmentFeedbacksQuery): string {
   return q ? `?${q}` : ''
 }
 
+/** GET /feedbacks/establishment/:establishmentId — query: from, to (ISO 8601), page, pageSize, sort, … */
 export async function fetchEstablishmentFeedbacks(
   establishmentId: number,
   params: EstablishmentFeedbacksQuery,

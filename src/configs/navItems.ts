@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   Building2,
   CalendarDays,
+  History,
   LayoutDashboard,
   Megaphone,
   MessageSquareText,
@@ -20,6 +21,7 @@ export interface PortalNavItem {
 export const PORTAL_NAV_ITEMS: PortalNavItem[] = [
   { to: '/', label: 'Painel', icon: LayoutDashboard },
   { to: '/feedbacks', label: 'Feedbacks', icon: MessageSquareText },
+  { to: '/historico-pontuacao', label: 'Histórico de pontuação', icon: History },
   { to: '/citacoes', label: 'Citações', icon: Megaphone },
   { to: '/pedidos', label: 'Pedidos', icon: ShoppingBag },
   { to: '/cardapio', label: 'Cardápio', icon: UtensilsCrossed },

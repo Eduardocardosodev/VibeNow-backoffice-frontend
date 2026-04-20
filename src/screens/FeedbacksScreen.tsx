@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { useAuth } from '@/contexts'
 import { FeedbackMoodStrip, type MoodCounts } from '@/components/feedbacks/FeedbackMoodStrip'
@@ -85,6 +86,47 @@ function TopicBars({ item }: { item: EstablishmentFeedbackItem }) {
 
 export function FeedbacksScreen() {
   const { access, activeEstablishmentId, selectEstablishment } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const establishmentOptions = useMemo(() => {
+    const m = new Map<number, string>()
+    access?.ownedEstablishments.forEach((e) => m.set(e.id, e.name))
+    access?.employments.forEach((e) => m.set(e.establishmentId, e.establishmentName))
+    return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1], 'pt'))
+  }, [access])
+
+  const urlPeriod = useMemo(() => {
+    const from = searchParams.get('from')?.trim() ?? ''
+    const to = searchParams.get('to')?.trim() ?? ''
+    if (!from || !to) return null
+    const df = new Date(from)
+    const dt = new Date(to)
+    if (Number.isNaN(df.getTime()) || Number.isNaN(dt.getTime()) || df.getTime() > dt.getTime()) {
+      return null
+    }
+    return { from, to }
+  }, [searchParams])
+
+  const urlEstablishmentId = useMemo(() => {
+    const raw = searchParams.get('establishmentId')?.trim() ?? ''
+    if (!raw) return null
+    const n = Number(raw)
+    if (!Number.isFinite(n) || n <= 0) return null
+    return n
+  }, [searchParams])
+
+  const feedbackEstablishmentId = useMemo(() => {
+    if (
+      urlPeriod &&
+      urlEstablishmentId != null &&
+      establishmentOptions.some(([id]) => id === urlEstablishmentId)
+    ) {
+      return urlEstablishmentId
+    }
+    return activeEstablishmentId
+  }, [urlPeriod, urlEstablishmentId, establishmentOptions, activeEstablishmentId])
+
+  const periodKey = urlPeriod ? `${urlPeriod.from}|${urlPeriod.to}|${urlEstablishmentId ?? ''}` : ''
 
   const [preset, setPreset] = useState<Preset>('today')
   const [page, setPage] = useState(1)
@@ -102,18 +144,29 @@ export function FeedbacksScreen() {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
-  const establishmentOptions = useMemo(() => {
-    const m = new Map<number, string>()
-    access?.ownedEstablishments.forEach((e) => m.set(e.id, e.name))
-    access?.employments.forEach((e) => m.set(e.establishmentId, e.establishmentName))
-    return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1], 'pt'))
-  }, [access])
-
   useEffect(() => {
     if (activeEstablishmentId == null && establishmentOptions.length === 1) {
       selectEstablishment(establishmentOptions[0][0])
     }
   }, [activeEstablishmentId, establishmentOptions, selectEstablishment])
+
+  useEffect(() => {
+    if (urlPeriod) setPreset('history')
+  }, [urlPeriod])
+
+  useLayoutEffect(() => {
+    if (urlPeriod == null || urlEstablishmentId == null) return
+    if (!establishmentOptions.some(([id]) => id === urlEstablishmentId)) return
+    if (activeEstablishmentId !== urlEstablishmentId) {
+      selectEstablishment(urlEstablishmentId)
+    }
+  }, [
+    urlPeriod,
+    urlEstablishmentId,
+    establishmentOptions,
+    activeEstablishmentId,
+    selectEstablishment,
+  ])
 
   const ratingFilterError = useMemo(() => {
     const min = minRating === '' ? null : Number(minRating)
@@ -134,7 +187,7 @@ export function FeedbacksScreen() {
     return null
   }, [preset, historyFrom, historyTo])
 
-  const queryBlocked = Boolean(ratingFilterError || historyDateError)
+  const queryBlocked = Boolean(ratingFilterError || (!urlPeriod && historyDateError))
 
   const apiQuery = useMemo(() => {
     const q: Parameters<typeof fetchEstablishmentFeedbacks>[1] = {
@@ -151,7 +204,10 @@ export function FeedbacksScreen() {
     if (photoFilter === 'without') q.hasPhoto = false
 
     const now = new Date()
-    if (preset === 'hour') {
+    if (urlPeriod) {
+      q.from = urlPeriod.from
+      q.to = urlPeriod.to
+    } else if (preset === 'hour') {
       const r = utcLastHourToNowRange(now)
       q.from = r.from
       q.to = r.to
@@ -171,10 +227,10 @@ export function FeedbacksScreen() {
     }
 
     return q
-  }, [preset, page, pageSize, sort, minRating, maxRating, photoFilter, historyFrom, historyTo])
+  }, [urlPeriod, preset, page, pageSize, sort, minRating, maxRating, photoFilter, historyFrom, historyTo])
 
   const load = useCallback(async () => {
-    if (activeEstablishmentId == null) {
+    if (feedbackEstablishmentId == null) {
       setLoading(false)
       setData(null)
       return
@@ -188,7 +244,7 @@ export function FeedbacksScreen() {
     setError(null)
     setLoading(true)
     try {
-      const res = await fetchEstablishmentFeedbacks(activeEstablishmentId, apiQuery)
+      const res = await fetchEstablishmentFeedbacks(feedbackEstablishmentId, apiQuery)
       setData(res)
       setLastRefresh(new Date())
     } catch (e) {
@@ -199,22 +255,22 @@ export function FeedbacksScreen() {
     } finally {
       setLoading(false)
     }
-  }, [activeEstablishmentId, apiQuery, queryBlocked])
+  }, [feedbackEstablishmentId, apiQuery, queryBlocked])
 
   useEffect(() => {
     void load()
   }, [load])
 
   useEffect(() => {
-    if (activeEstablishmentId == null || queryBlocked) return
+    if (feedbackEstablishmentId == null || queryBlocked) return
     if (preset !== 'hour' && preset !== 'today') return
     const t = window.setInterval(() => void load(), POLL_MS)
     return () => window.clearInterval(t)
-  }, [activeEstablishmentId, preset, load, queryBlocked])
+  }, [feedbackEstablishmentId, preset, load, queryBlocked])
 
   useEffect(() => {
     setPage(1)
-  }, [preset, pageSize, sort, minRating, maxRating, photoFilter, historyFrom, historyTo])
+  }, [preset, pageSize, sort, minRating, maxRating, photoFilter, historyFrom, historyTo, periodKey])
 
   const moodCounts = useMemo(() => countsFromItems(data?.items ?? []), [data])
 
@@ -241,7 +297,7 @@ export function FeedbacksScreen() {
   const canPrev = (data?.page ?? 1) > 1
   const canNext = data != null && data.page < data.totalPages
 
-  if (activeEstablishmentId == null) {
+  if (activeEstablishmentId == null && feedbackEstablishmentId == null) {
     return (
       <div className="feedbacks">
         <div className="feedbacks__inner">
@@ -299,7 +355,10 @@ export function FeedbacksScreen() {
             role="tab"
             aria-selected={preset === 'hour'}
             className={`feedbacks__preset${preset === 'hour' ? ' feedbacks__preset--active' : ''}`}
-            onClick={() => setPreset('hour')}
+            onClick={() => {
+              setSearchParams({}, { replace: true })
+              setPreset('hour')
+            }}
           >
             Última hora
           </button>
@@ -308,7 +367,10 @@ export function FeedbacksScreen() {
             role="tab"
             aria-selected={preset === 'today'}
             className={`feedbacks__preset${preset === 'today' ? ' feedbacks__preset--active' : ''}`}
-            onClick={() => setPreset('today')}
+            onClick={() => {
+              setSearchParams({}, { replace: true })
+              setPreset('today')
+            }}
           >
             Hoje
           </button>
@@ -317,11 +379,35 @@ export function FeedbacksScreen() {
             role="tab"
             aria-selected={preset === 'history'}
             className={`feedbacks__preset${preset === 'history' ? ' feedbacks__preset--active' : ''}`}
-            onClick={() => setPreset('history')}
+            onClick={() => {
+              setSearchParams({}, { replace: true })
+              setPreset('history')
+            }}
           >
             Histórico
           </button>
         </div>
+
+        {urlPeriod ? (
+          <div className="feedbacks__period-banner" role="status">
+            <p className="feedbacks__period-banner__text">
+              A mostrar feedbacks entre{' '}
+              <strong>{formatSpDateTimeLabel(urlPeriod.from)}</strong> e{' '}
+              <strong>{formatSpDateTimeLabel(urlPeriod.to)}</strong> (horário de São Paulo), conforme o
+              período escolhido no histórico de pontuação.
+            </p>
+            <button
+              type="button"
+              className="feedbacks__period-banner__btn"
+              onClick={() => {
+                setSearchParams({}, { replace: true })
+                setPreset('today')
+              }}
+            >
+              Limpar filtro de período
+            </button>
+          </div>
+        ) : null}
 
         <div className="feedbacks__meta">
           {preset === 'hour' || preset === 'today' ? (

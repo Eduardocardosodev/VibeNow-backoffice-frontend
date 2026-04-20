@@ -14,6 +14,7 @@ import { RegisterScreen } from '@/screens/RegisterScreen'
 import { SettingsScreen } from '@/screens/SettingsScreen'
 import { EstablishmentScreen } from '@/screens/EstablishmentScreen'
 import { EquipaScreen } from '@/screens/EquipaScreen'
+import { ScorePeriodsScreen } from '@/screens/ScorePeriodsScreen'
 
 function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route index element={<OverviewDashboard />} />
           <Route path="feedbacks" element={<FeedbacksScreen />} />
+          <Route path="historico-pontuacao" element={<ScorePeriodsScreen />} />
           <Route path="citacoes" element={<QuotesScreen />} />
           <Route path="pedidos" element={<OrdersScreen />} />
           <Route path="cardapio" element={<MenuScreen />} />

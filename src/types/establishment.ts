@@ -25,6 +25,8 @@ export interface Establishment {
   longitude: number
   score: number
   openingHours: OpeningHoursPayload | null
+  /** IANA (ex.: America/Sao_Paulo) — usado para formatar períodos operacionais no portal. */
+  operatingTimeZone?: string | null
   ownerUserId: number
   feedbackRewardEnabled: boolean
   feedbackRewardMessage: string | null
